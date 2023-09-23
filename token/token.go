@@ -4,9 +4,10 @@ type TokenType string
 
 type Token struct {
 	Type    TokenType
-	Literal string
+	Literal string // Literal value in code not token name | let ✅ LET ❌
 }
 
+// Tokens
 const (
 	ILLEGAL = "ILLEGAL" // Invalid character
 	EOF     = "EOF"     // End of file

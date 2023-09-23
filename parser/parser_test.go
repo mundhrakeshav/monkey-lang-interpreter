@@ -9,57 +9,38 @@ import (
 )
 
 func TestLetStatements(t *testing.T) {
-	// tests := []struct {
-	// 	input              string
-	// 	expectedIdentifier string
-	// 	expectedValue      interface{}
-	// }{
-	// 	{"let x = 5;", "x", 5},
-	// 	{"let y = true;", "y", true},
-	// 	{"let foobar = y;", "foobar", "y"},
-	// }
-
 	input := `
 	let x = 5;
 	let y = 10;
-	let foobar = 863863;`
-
+	let foobar = 696969;
+	`
 	l := lexer.New(input)
 	p := parser.New(l)
+
 	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
 	if program == nil {
-		t.Fatalf("ParseProgram() returned `nil`")
+		t.Fatalf("ParseProgram() returned nil")
 	}
+
 	if len(program.Statements) != 3 {
-		t.Fatalf("program.Statements does not contain 3 statements. got=%d",
+		t.Fatalf("program doesn't contain 3 statements, got %d statements",
 			len(program.Statements))
 	}
-	tests := []struct {
+
+	test := []struct {
 		expectedIdentifier string
-	}{
-		{"x"},
-		{"y"},
-		{"foobar"},
-	}
-	for i, tt := range tests {
+	}{{"x"}, {"y"}, {"foobar"}}
+
+	for i, tt := range test {
 		stmt := program.Statements[i]
 		if !testLetStatement(t, stmt, tt.expectedIdentifier) {
 			return
 		}
 	}
-	// for _, tt := range tests {
-	// 	l := lexer.New(tt.input)
-	// 	p := parser.New(l)
-	// 	program := p.ParseProgram()
-	// 	if program == nil {
-	// 		t.Fatalf("ParseProgram() returned `nil`")
-	// 	}
-	// 	if len(program.Statements) != 3 {
-	// 		t.Fatalf("program.Statements does not contain 3 statements. got=%d",
-	// 			len(program.Statements))
-	// 	}
-	// }
 }
+
 func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
 	if s.TokenLiteral() != "let" {
 		t.Errorf("s.TokenLiteral not 'let'. got=%q", s.TokenLiteral())
@@ -84,4 +65,16 @@ func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
 	}
 
 	return true
+}
+func checkParserErrors(t *testing.T, p *parser.Parser) {
+	errors := p.Errors()
+	if len(errors) == 0 {
+		return
+	}
+
+	t.Errorf("parser has %d errors", len(errors))
+	for _, msg := range errors {
+		t.Errorf("parser error: %q", msg)
+	}
+	t.FailNow()
 }

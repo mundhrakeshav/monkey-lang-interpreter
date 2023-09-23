@@ -14,6 +14,74 @@ func New(input string) *Lexer {
 	l.readChar()
 	return l
 }
+
+/*
+Get next character and advance the position in input
+*/
+func (l *Lexer) readChar() {
+	// Check if we have reached the end of input
+	if l.readPosition >= len(l.input) {
+		l.ch = 0 // 0 is ascii code for null char
+	} else {
+		// If we haven't reached the end get next char
+		l.ch = l.input[l.readPosition]
+	}
+	// Increment position and readPosition by 1
+	l.position = l.readPosition
+	l.readPosition += 1
+}
+
+func (l *Lexer) skipWhitespace() {
+	for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' {
+		//	\a is alert/bell
+		// 	\b is backspace
+		// 	\n is newline
+		// 	\r is carriage return (return to left margin)
+		// 	\t is tab
+		l.readChar()
+	}
+}
+
+/*
+Get next char
+*/
+func (l *Lexer) peekChar() byte {
+	if l.readPosition >= len(l.input) {
+		return 0
+	} else {
+		return l.input[l.readPosition]
+	}
+}
+
+func isLetter(ch byte) bool {
+	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_'
+}
+
+func isDigit(ch byte) bool {
+	return '0' <= ch && ch <= '9'
+}
+
+func (l *Lexer) readNumber() string {
+	position := l.position
+	for isDigit(l.ch) {
+		l.readChar()
+	}
+	return l.input[position:l.position]
+}
+
+func (l *Lexer) readIdentifier() string {
+	position := l.position
+	for isLetter(l.ch) {
+		l.readChar()
+	}
+	return l.input[position:l.position]
+}
+
+func newToken(tokenType token.TokenType, ch byte) token.Token {
+	return token.Token{Type: tokenType, Literal: string(ch)}
+}
+
+// returns latest token and updates l to next token
 func (l *Lexer) NextToken() token.Token {
 	l.skipWhitespace()
 
@@ -21,7 +89,7 @@ func (l *Lexer) NextToken() token.Token {
 	switch l.ch {
 	case '=':
 		if l.peekChar() == '=' {
-			// If next char is  `=` as well then tok = `==`
+			// If next char is  `=` as well then tok is `==`
 			ch := l.ch
 			l.readChar()
 			literal := string(ch) + string(l.ch)
@@ -69,6 +137,7 @@ func (l *Lexer) NextToken() token.Token {
 		tok.Literal = ""
 		tok.Type = token.EOF
 	default:
+		// If it isn't one of token it is a identifier or number.
 		if isLetter(l.ch) {
 			tok.Literal = l.readIdentifier()          // If it is a letter then read whole identifier or keyword
 			tok.Type = token.LookupIdent(tok.Literal) // Get Identifier token
@@ -84,60 +153,4 @@ func (l *Lexer) NextToken() token.Token {
 	}
 	l.readChar()
 	return tok
-}
-
-func (l *Lexer) peekChar() byte {
-	if l.readPosition >= len(l.input) {
-		return 0
-	} else {
-		return l.input[l.readPosition]
-	}
-}
-
-func isLetter(ch byte) bool {
-	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_'
-}
-
-func isDigit(ch byte) bool {
-	return '0' <= ch && ch <= '9'
-}
-func (l *Lexer) skipWhitespace() {
-	for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' {
-		l.readChar()
-	}
-}
-func (l *Lexer) readNumber() string {
-	position := l.position
-	for isDigit(l.ch) {
-		l.readChar()
-	}
-	return l.input[position:l.position]
-}
-
-/*
-Get next character and advance the position in input
-*/
-func (l *Lexer) readChar() {
-	// Check if we have reached the end of input
-	if l.readPosition >= len(l.input) {
-		l.ch = 0 // 0 is ascii code for null char
-	} else {
-		// If we haven't reached the end get next char
-		l.ch = l.input[l.readPosition]
-	}
-	// Increment position and readPosition by 1
-	l.position = l.readPosition
-	l.readPosition += 1
-}
-
-func (l *Lexer) readIdentifier() string {
-	position := l.position
-	for isLetter(l.ch) {
-		l.readChar()
-	}
-	return l.input[position:l.position]
-}
-
-func newToken(tokenType token.TokenType, ch byte) token.Token {
-	return token.Token{Type: tokenType, Literal: string(ch)}
 }
